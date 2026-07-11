@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { FileModule } from './file/file.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
 
@@ -25,6 +26,8 @@ const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
         logging: configService.get<string>('NODE_ENV') === 'development',
       }),
     }),
+
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
