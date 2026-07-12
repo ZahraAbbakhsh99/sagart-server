@@ -45,18 +45,18 @@ async function bootstrap() {
     credentials: true,
   });
 
-  try {
-    const jwt = require('jsonwebtoken');
-    const adminToken = jwt.sign(
-      { sub: 'admin-id', role: 'admin' },
-      process.env.JWT_SECRET_ADMIN || 'secret',
-      { expiresIn: process.env.JWT_EXPIRES_IN_ADMIN || '1d' }
-    );
-    console.log('Admin test token (copy this for auth):');
-    console.log(adminToken);
-  } catch (e) {
-    console.warn('JWT secret not set or jsonwebtoken not installed, skipping admin token generation.');
-  }
+  // try {
+  //   const jwt = require('jsonwebtoken');
+  //   const adminToken = jwt.sign(
+  //     { sub: 'admin-id', role: 'admin' },
+  //     process.env.JWT_SECRET_ADMIN || 'secret',
+  //     { expiresIn: process.env.JWT_EXPIRES_IN_ADMIN || '1d' }
+  //   );
+  //   console.log('Admin test token (copy this for auth):');
+  //   console.log(adminToken);
+  // } catch (e) {
+  //   console.warn('JWT secret not set or jsonwebtoken not installed, skipping admin token generation.');
+  // }
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
