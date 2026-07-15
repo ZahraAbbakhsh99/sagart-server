@@ -8,7 +8,7 @@ import { CategoryService } from '../../category/category.service';
 import { CreateCategoryDto } from '../../category/dto/create-category.dto';
 import { UpdateCategoryDto } from '../../category/dto/update-category.dto';
 
-@Controller('admin')
+@Controller('admin-categories')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, AdminGuard)
 export class AdminCategoryController {

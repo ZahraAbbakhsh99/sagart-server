@@ -9,6 +9,7 @@ import { SmsModule } from './sms/sms.module';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoryModule } from './category/category.module';
+import { ProductModule } from './product/product.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
 
@@ -43,6 +44,8 @@ const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
     AdminModule,
 
     CategoryModule,
+
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [AppService],
