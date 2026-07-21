@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
 import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
+import { CartModule } from './cart/cart.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
 
@@ -46,6 +47,8 @@ const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
     CategoryModule,
 
     ProductModule,
+
+    CartModule,
   ],
   controllers: [AppController],
   providers: [AppService],

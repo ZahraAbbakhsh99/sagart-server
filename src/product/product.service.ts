@@ -44,7 +44,7 @@ export class ProductService {
     return isNaN(lastNumber) ? 0 : lastNumber;
   }
 
-  private async findOneEntity(id: string): Promise<Product> {
+  public async findOneEntity(id: string): Promise<Product> {
     const product = await this.productRepo.findOne({
       where: { id },
       relations: { category: true },

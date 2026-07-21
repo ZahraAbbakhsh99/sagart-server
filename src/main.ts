@@ -25,7 +25,7 @@ async function bootstrap() {
     }),
   );
 
-  // app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.useGlobalInterceptors(new TransformInterceptor());
 
