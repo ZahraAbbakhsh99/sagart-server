@@ -3,22 +3,26 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  forwardRef,
+  Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { BulkCreateProductDto } from './dto/bulk-create-product.dto';
 import { ProductListResponseDto } from './dto/product-list-response.dto';
 import { ProductDetailResponseDto } from './dto/product-detail-response.dto';
-import { In } from 'typeorm';
+import { FavoritesService } from '../favorites/favorites.service';
 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectRepository(Product)
     private productRepo: Repository<Product>,
+    @Inject(forwardRef(() => FavoritesService))
+    private favoritesService: FavoritesService,
   ) {}
 
   private generateSlug(title: string, measure: string): string {
@@ -53,7 +57,7 @@ export class ProductService {
     return product;
   }
 
-  private mapToDetailDto(product: Product): ProductDetailResponseDto {
+  private mapToDetailDto(product: Product, isFavorite: boolean = false): ProductDetailResponseDto {
     return {
       id: product.id,
       title: product.title,
@@ -61,8 +65,8 @@ export class ProductService {
       code: product.code,
       price: Number(product.price),
       discountDisplay: product.discountPercent > 0 
-      ? `${Math.round(Number(product.discountPercent))}%` 
-      : '۰%',
+        ? `${Math.round(Number(product.discountPercent))}%` 
+        : '۰%',
       priceAfterDiscount: product.priceAfterDiscount,
       measure: product.measure,
       images: product.images,
@@ -74,6 +78,7 @@ export class ProductService {
       usageGuide: product.usageGuide,
       rating: product.rating,
       isActive: product.isActive,
+      isFavorite,
       category: {
         id: product.category?.id,
         name: product.category?.name,
@@ -160,6 +165,7 @@ export class ProductService {
     page: number = 1,
     limit: number = 10,
     random: boolean = false,
+    userId?: string,
   ): Promise<{
     items: ProductListResponseDto[];
     total: number;
@@ -207,7 +213,7 @@ export class ProductService {
 
     idsQuery.distinct(false);
 
-    const idsResult = await idsQuery.getRawMany(); 
+    const idsResult = await idsQuery.getRawMany();
     const ids = idsResult.map((row: any) => row.product_id);
 
     if (ids.length === 0) {
@@ -229,6 +235,12 @@ export class ProductService {
       .map((id) => products.find((p) => p.id === id))
       .filter((p): p is Product => p !== undefined);
 
+    let favoriteIds = new Set<string>();
+    if (userId && orderedProducts.length > 0) {
+      const productIds = orderedProducts.map((p) => p.id);
+      favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, productIds);
+    }
+
     const items = orderedProducts.map((product) => ({
       id: product.id,
       title: product.title,
@@ -243,6 +255,7 @@ export class ProductService {
       images: product.images,
       rating: product.rating,
       isActive: product.isActive,
+      isFavorite: favoriteIds.has(product.id),
       category: {
         id: product.category?.id,
         name: product.category?.name,
@@ -258,18 +271,28 @@ export class ProductService {
     };
   }
 
-  async findById(id: string): Promise<ProductDetailResponseDto> {
+  async findById(id: string, userId?: string): Promise<ProductDetailResponseDto> {
     const product = await this.findOneEntity(id);
-    return this.mapToDetailDto(product);
+    let isFavorite = false;
+    if (userId) {
+      const favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, [product.id]);
+      isFavorite = favoriteIds.has(product.id);
+    }
+    return this.mapToDetailDto(product, isFavorite);
   }
 
-  async findBySlug(slug: string): Promise<ProductDetailResponseDto> {
+  async findBySlug(slug: string, userId?: string): Promise<ProductDetailResponseDto> {
     const product = await this.productRepo.findOne({
       where: { slug, isActive: true },
       relations: { category: true },
     });
     if (!product) throw new NotFoundException('محصول یافت نشد');
-    return this.mapToDetailDto(product);
+    let isFavorite = false;
+    if (userId) {
+      const favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, [product.id]);
+      isFavorite = favoriteIds.has(product.id);
+    }
+    return this.mapToDetailDto(product, isFavorite);
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<Product> {
@@ -319,6 +342,7 @@ export class ProductService {
   async getRelatedProductsBySlug(
     slug: string,
     limit: number = 10,
+    userId?: string,
   ): Promise<ProductDetailResponseDto[]> {
     const currentProduct = await this.productRepo.findOne({
       where: { slug, isActive: true },
@@ -333,9 +357,8 @@ export class ProductService {
       where: { title: currentProduct.title, isActive: true },
       relations: { category: true },
     });
-    const otherVariants = variants.filter((p) => p.id !== currentProduct.id); // ✅ استفاده از currentProduct.id
-    const variantsToAdd = otherVariants.slice(0, 3);
-    for (const v of variantsToAdd) {
+    const otherVariants = variants.filter((p) => p.id !== currentProduct.id);
+    for (const v of otherVariants.slice(0, 3)) {
       result.push(v);
       usedIds.add(v.id);
     }
@@ -348,11 +371,9 @@ export class ProductService {
       },
       relations: { category: true },
     });
-    const filteredSameCategorySameWeight = sameCategorySameWeight.filter(
-      (p) => !usedIds.has(p.id) && p.title !== currentProduct.title,
-    );
-    const toAddSameCategorySameWeight = filteredSameCategorySameWeight.slice(0, 3);
-    for (const p of toAddSameCategorySameWeight) {
+    for (const p of sameCategorySameWeight
+      .filter((p) => !usedIds.has(p.id) && p.title !== currentProduct.title)
+      .slice(0, 3)) {
       result.push(p);
       usedIds.add(p.id);
     }
@@ -364,11 +385,9 @@ export class ProductService {
       },
       relations: { category: true },
     });
-    const filteredSameCategoryDiffWeight = sameCategoryDifferentWeight.filter(
-      (p) => !usedIds.has(p.id) && p.weight !== currentProduct.weight,
-    );
-    const toAddSameCategoryDiffWeight = filteredSameCategoryDiffWeight.slice(0, 2);
-    for (const p of toAddSameCategoryDiffWeight) {
+    for (const p of sameCategoryDifferentWeight
+      .filter((p) => !usedIds.has(p.id) && p.weight !== currentProduct.weight)
+      .slice(0, 2)) {
       result.push(p);
       usedIds.add(p.id);
     }
@@ -380,11 +399,9 @@ export class ProductService {
       },
       relations: { category: true },
     });
-    const filteredOtherCategories = otherCategoriesSameWeight.filter(
-      (p) => !usedIds.has(p.id) && p.categoryId !== currentProduct.categoryId,
-    );
-    const toAddOtherCategories = filteredOtherCategories.slice(0, 2);
-    for (const p of toAddOtherCategories) {
+    for (const p of otherCategoriesSameWeight
+      .filter((p) => !usedIds.has(p.id) && p.categoryId !== currentProduct.categoryId)
+      .slice(0, 2)) {
       result.push(p);
       usedIds.add(p.id);
     }
@@ -395,13 +412,22 @@ export class ProductService {
         where: { isActive: true },
         relations: { category: true },
       });
-      const filteredRandom = randomProducts.filter((p) => !usedIds.has(p.id));
-      const toAddRandom = filteredRandom.slice(0, remaining);
-      for (const p of toAddRandom) {
+      for (const p of randomProducts
+        .filter((p) => !usedIds.has(p.id))
+        .slice(0, remaining)) {
         result.push(p);
         usedIds.add(p.id);
       }
     }
-    return result.slice(0, limit).map((product) => this.mapToDetailDto(product));
+
+    let favoriteIds = new Set<string>();
+    if (userId && result.length > 0) {
+      const productIds = result.map((p) => p.id);
+      favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, productIds);
+    }
+
+    return result.slice(0, limit).map((product) =>
+      this.mapToDetailDto(product, favoriteIds.has(product.id))
+    );
   }
 }

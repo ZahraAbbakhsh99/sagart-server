@@ -8,6 +8,7 @@ import { UserModule } from '../user/user.module';
 import { AdminModule } from '../admin/admin.module';
 import { SmsModule } from '../sms/sms.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { OptionalJwtAuthGuard } from './guards/optional-jwt-auth.guard';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [JwtModule, JwtStrategy],
+  providers: [AuthService, JwtStrategy, OptionalJwtAuthGuard],
+  exports: [JwtModule, JwtStrategy, OptionalJwtAuthGuard],
 })
 export class AuthModule {}

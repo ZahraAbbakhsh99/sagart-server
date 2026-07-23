@@ -39,4 +39,7 @@ export class ProductListResponseDto {
     id: string;
     name: string;
   };
+
+  @ApiProperty({ example: true })
+  isFavorite!: boolean;
 }

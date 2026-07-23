@@ -62,4 +62,7 @@ export class ProductDetailResponseDto {
 
   @ApiProperty({ type: CategoryBriefDto })
   category!: CategoryBriefDto;
+
+  @ApiProperty({ example: true })
+  isFavorite!: boolean;
 }
