@@ -65,4 +65,7 @@ export class ProductDetailResponseDto {
 
   @ApiProperty({ example: true })
   isFavorite!: boolean;
+
+  @ApiProperty({ example: false })
+  isInCart!: boolean;
 }

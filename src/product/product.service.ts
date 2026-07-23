@@ -15,6 +15,7 @@ import { BulkCreateProductDto } from './dto/bulk-create-product.dto';
 import { ProductListResponseDto } from './dto/product-list-response.dto';
 import { ProductDetailResponseDto } from './dto/product-detail-response.dto';
 import { FavoritesService } from '../favorites/favorites.service';
+import { CartService } from '../cart/cart.service';
 
 @Injectable()
 export class ProductService {
@@ -23,6 +24,8 @@ export class ProductService {
     private productRepo: Repository<Product>,
     @Inject(forwardRef(() => FavoritesService))
     private favoritesService: FavoritesService,
+    @Inject(forwardRef(() => CartService))
+    private cartService: CartService,
   ) {}
 
   private generateSlug(title: string, measure: string): string {
@@ -57,7 +60,7 @@ export class ProductService {
     return product;
   }
 
-  private mapToDetailDto(product: Product, isFavorite: boolean = false): ProductDetailResponseDto {
+  private mapToDetailDto(product: Product, isFavorite: boolean = false, isInCart: boolean = false,): ProductDetailResponseDto {
     return {
       id: product.id,
       title: product.title,
@@ -79,6 +82,7 @@ export class ProductService {
       rating: product.rating,
       isActive: product.isActive,
       isFavorite,
+      isInCart,
       category: {
         id: product.category?.id,
         name: product.category?.name,
@@ -236,9 +240,11 @@ export class ProductService {
       .filter((p): p is Product => p !== undefined);
 
     let favoriteIds = new Set<string>();
+    let cartIds = new Set<string>();
     if (userId && orderedProducts.length > 0) {
       const productIds = orderedProducts.map((p) => p.id);
       favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, productIds);
+      cartIds = await this.cartService.getCartProductIds(userId, productIds);
     }
 
     const items = orderedProducts.map((product) => ({
@@ -256,6 +262,7 @@ export class ProductService {
       rating: product.rating,
       isActive: product.isActive,
       isFavorite: favoriteIds.has(product.id),
+      isInCart: cartIds.has(product.id),
       category: {
         id: product.category?.id,
         name: product.category?.name,
@@ -274,11 +281,15 @@ export class ProductService {
   async findById(id: string, userId?: string): Promise<ProductDetailResponseDto> {
     const product = await this.findOneEntity(id);
     let isFavorite = false;
+    let isInCart = false;
     if (userId) {
       const favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, [product.id]);
       isFavorite = favoriteIds.has(product.id);
+
+      const cartIds = await this.cartService.getCartProductIds(userId, [product.id]);
+      isInCart = cartIds.has(product.id);
     }
-    return this.mapToDetailDto(product, isFavorite);
+    return this.mapToDetailDto(product, isFavorite, isInCart);
   }
 
   async findBySlug(slug: string, userId?: string): Promise<ProductDetailResponseDto> {
@@ -288,11 +299,15 @@ export class ProductService {
     });
     if (!product) throw new NotFoundException('محصول یافت نشد');
     let isFavorite = false;
+    let isInCart = false;
     if (userId) {
       const favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, [product.id]);
       isFavorite = favoriteIds.has(product.id);
+
+      const cartIds = await this.cartService.getCartProductIds(userId, [product.id]);
+      isInCart = cartIds.has(product.id);
     }
-    return this.mapToDetailDto(product, isFavorite);
+    return this.mapToDetailDto(product, isFavorite, isInCart);
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<Product> {
@@ -421,13 +436,15 @@ export class ProductService {
     }
 
     let favoriteIds = new Set<string>();
+    let cartIds = new Set<string>();
     if (userId && result.length > 0) {
       const productIds = result.map((p) => p.id);
       favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, productIds);
+      cartIds = await this.cartService.getCartProductIds(userId, productIds);
     }
 
     return result.slice(0, limit).map((product) =>
-      this.mapToDetailDto(product, favoriteIds.has(product.id))
+      this.mapToDetailDto(product, favoriteIds.has(product.id), cartIds.has(product.id))
     );
   }
 }

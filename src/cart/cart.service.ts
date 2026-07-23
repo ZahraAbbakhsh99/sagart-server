@@ -2,9 +2,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Cart } from './entities/cart.entity';
 import { CartItem } from './entities/cart-item.entity';
 import { ProductService } from '../product/product.service';
@@ -18,6 +20,7 @@ export class CartService {
     private cartRepo: Repository<Cart>,
     @InjectRepository(CartItem)
     private cartItemRepo: Repository<CartItem>,
+    @Inject(forwardRef(() => ProductService))
     private productService: ProductService,
   ) {}
 
@@ -172,5 +175,32 @@ export class CartService {
     const cart = await this.getOrCreateCart(userId);
     await this.cartItemRepo.delete({ cartId: cart.id });
     return this.getCart(userId);
+  }
+
+  async getCartProductIds(userId: string, productIds: string[]): Promise<Set<string>> {
+    if (!userId || !productIds || productIds.length === 0) {
+      return new Set();
+    }
+
+    const cart = await this.cartRepo.findOne({
+      where: { userId },
+      relations: { items: true },
+    });
+
+    if (!cart) {
+      return new Set();
+    }
+
+    const cartItems = await this.cartItemRepo.find({
+      where: {
+        cartId: cart.id,
+        productId: In(productIds),
+      },
+      select: {
+        productId: true,
+      },
+    });
+
+    return new Set(cartItems.map((item) => item.productId));
   }
 }
