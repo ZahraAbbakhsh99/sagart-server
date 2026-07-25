@@ -7,21 +7,25 @@ import { UserModule } from '../user/user.module';
 import { CategoryModule } from '../category/category.module';
 import { ProductModule } from '../product/product.module';
 import { ReviewModule } from '../review/review.module';
+import { ArticleModule } from '../article/article.module';
 
 import { AdminCategoryController } from './categories/admin.controller';
 import { AdminProductController } from './products/admin-product.controller';
 import { AdminReviewController } from './reviews/admin-review.controller';
+import { AdminArticleController } from './articles/admin-article.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), 
             UserModule, 
             CategoryModule,
             ProductModule,
-            ReviewModule],
+            ReviewModule,
+            ArticleModule],
   controllers: [AdminController,
                 AdminCategoryController,
                 AdminProductController,
-                AdminReviewController],
+                AdminReviewController,
+                AdminArticleController],
   providers: [AdminService],
   exports: [AdminService],
 })

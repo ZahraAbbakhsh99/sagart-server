@@ -447,4 +447,12 @@ export class ProductService {
       this.mapToDetailDto(product, favoriteIds.has(product.id), cartIds.has(product.id))
     );
   }
+
+  async findAllByIds(ids: string[]): Promise<Product[]> {
+    if (!ids || ids.length === 0) return [];
+    return this.productRepo.find({
+      where: { id: In(ids) },
+      relations: { category: true },
+    });
+  }
 }

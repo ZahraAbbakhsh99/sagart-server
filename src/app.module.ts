@@ -13,6 +13,7 @@ import { ProductModule } from './product/product.module';
 import { CartModule } from './cart/cart.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { ReviewModule } from './review/review.module';
+import { ArticleModule } from './article/article.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
 
@@ -55,6 +56,8 @@ const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
     FavoritesModule,
 
     ReviewModule,
+
+    ArticleModule,
   ],
   controllers: [AppController],
   providers: [AppService],
