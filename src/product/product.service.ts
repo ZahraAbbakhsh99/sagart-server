@@ -455,4 +455,44 @@ export class ProductService {
       relations: { category: true },
     });
   }
+
+  async getVariants(slug: string, userId?: string) {
+    const currentProduct = await this.productRepo.findOne({
+      where: { slug, isActive: true },
+    });
+    if (!currentProduct) {
+      throw new NotFoundException('محصول یافت نشد');
+    }
+
+    const variants = await this.productRepo.find({
+      where: {
+        title: currentProduct.title,
+        isActive: true,
+      },
+      relations: {'category': true},
+      order: { measure: 'ASC' }, 
+    });
+
+    const otherVariants = variants.filter((p) => p.id !== currentProduct.id);
+
+    let favoriteIds = new Set<string>();
+    if (userId && otherVariants.length > 0) {
+      const productIds = otherVariants.map((p) => p.id);
+      favoriteIds = await this.favoritesService.getFavoriteProductIds(userId, productIds);
+    }
+
+    return otherVariants.map((variant) => ({
+      id: variant.id,
+      title: variant.title,
+      slug: variant.slug,
+      measure: variant.measure,
+      price: Number(variant.price),
+      priceAfterDiscount: variant.priceAfterDiscount,
+      discountDisplay: variant.discountPercent > 0
+        ? `${Math.round(Number(variant.discountPercent))}%`
+        : '۰%',
+      image: variant.images && variant.images.length > 0 ? variant.images[0] : null,
+      isFavorite: favoriteIds.has(variant.id),
+    }));
+  }
 }

@@ -57,4 +57,12 @@ export class ProductController {
     const data = await this.productService.getRelatedProductsBySlug(slug, limit, userId);
     return { message: 'محصولات مشابه', data };
   }
+
+  @Get(':slug/variants')
+  @UseGuards(OptionalJwtAuthGuard)
+  async getVariants(@Param('slug') slug: string, @Request() req) {
+    const userId = req?.user?.id;
+    const data = await this.productService.getVariants(slug, userId);
+    return { message: 'ورینت‌های محصول', data };
+  }
 }
