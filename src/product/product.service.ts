@@ -493,6 +493,7 @@ export class ProductService {
         : '۰%',
       image: variant.images && variant.images.length > 0 ? variant.images[0] : null,
       isFavorite: favoriteIds.has(variant.id),
+      categoryName: variant.category?.name,
     }));
   }
 }

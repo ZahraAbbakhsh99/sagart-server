@@ -69,7 +69,7 @@ export class ArticleService {
   async findOneEntity(id: string): Promise<Article> {
     const article = await this.articleRepo.findOne({
       where: { id },
-      relations: { products: true },
+      relations: { products: {category: true} },
     });
     if (!article) throw new NotFoundException('مقاله یافت نشد');
     return article;
@@ -100,6 +100,7 @@ export class ArticleService {
         measure: p.measure,
         image: p.images && p.images.length > 0 ? p.images[0] : null,
         isActive: p.isActive,
+        categoryName: p.category?.name,
       })),
       createdAt: JalaliDateUtil.toJalali(article.createdAt, 'jDD jMMMM jYYYY'),
       updatedAt: JalaliDateUtil.toJalali(article.updatedAt, 'jDD jMMMM jYYYY'),
@@ -114,7 +115,7 @@ export class ArticleService {
   async findBySlug(slug: string) {
     const article = await this.articleRepo.findOne({
       where: { slug, status: ArticleStatus.PUBLISHED },
-      relations: { products: true },
+      relations: { products: {category: true} },
     });
     if (!article) throw new NotFoundException('مقاله یافت نشد');
     article.views += 1;

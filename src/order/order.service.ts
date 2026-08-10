@@ -76,6 +76,7 @@ export class OrderService {
                 item.product.images && item.product.images.length > 0
                   ? item.product.images[0]
                   : null,
+              categoryName: item.product.category?.name,
             }
           : null,
         quantity: item.quantity,
@@ -207,7 +208,9 @@ export class OrderService {
       relations: {
         address: true,
         items: {
-          product: true,
+          product: {
+            category: true,
+          }
         },
       },
     });

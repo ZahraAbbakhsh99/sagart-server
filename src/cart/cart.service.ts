@@ -86,6 +86,7 @@ export class CartService {
           slug: product.slug,
           measure: product.measure,
           image: firstImage,
+          categoryName: product.category?.name,
         },
         quantity: item.quantity,
         price: price,
