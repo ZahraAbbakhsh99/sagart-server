@@ -6,40 +6,55 @@ export class JalaliDateUtil {
     'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
   ];
 
-  static toJalali(
-    date: Date | string,
-    format: 'jYYYY/jMM/jDD' | 'jYYYY-jMM-jDD' | 'jDD jMMMM jYYYY' | 'jDD MMM jYYYY' | 'full' | 'jYYYY/jMM' | 'jYYYY-jMM'  = 'jYYYY/jMM/jDD'
-  ): string {
-    const m = moment(typeof date === 'string' ? new Date(date) : date);
-    if (!m.isValid()) return 'تاریخ نامعتبر';
+static toJalali(
+  date: Date | string,
+  format:
+    | 'jYYYY/jMM/jDD'
+    | 'jYYYY-jMM-jDD'
+    | 'jDD jMMMM jYYYY'
+    | 'jDD MMM jYYYY'
+    | 'full'
+    | 'jYYYY/jMM'
+    | 'jYYYY-jMM'
+    | 'jDD jMMMM jYYYY - HH:mm' = 'jYYYY/jMM/jDD'
+): string {
+  const m = moment(typeof date === 'string' ? new Date(date) : date);
+  if (!m.isValid()) return 'تاریخ نامعتبر';
 
-    switch (format) {
-      case 'jYYYY/jMM/jDD':
-        return m.format('jYYYY/jMM/jDD');
-      case 'jYYYY-jMM-jDD':
-        return m.format('jYYYY-jMM-jDD');
-      case 'jDD jMMMM jYYYY': {
-        const day = m.jDate();
-        const month = JalaliDateUtil.persianMonths[m.jMonth()];
-        const year = m.jYear();
-        return `${day} ${month} ${year}`;
-      }
-      case 'jDD MMM jYYYY': {
-        const day = m.jDate();
-        const month = JalaliDateUtil.persianMonths[m.jMonth()];
-        const year = m.jYear();
-        return `${day} ${month} ${year}`;
-      }
-      case 'full':
-        return `${m.format('jYYYY/jMM/jDD')} ${m.format('HH:mm')}`;
-      case 'jYYYY/jMM':
-        return m.format('jYYYY/jMM');
-      case 'jYYYY-jMM':
-        return m.format('jYYYY-jMM');
-        default:
-        return m.format('jYYYY/jMM/jDD');
+  switch (format) {
+    case 'jYYYY/jMM/jDD':
+      return m.format('jYYYY/jMM/jDD');
+    case 'jYYYY-jMM-jDD':
+      return m.format('jYYYY-jMM-jDD');
+    case 'jDD jMMMM jYYYY': {
+      const day = m.jDate();
+      const month = JalaliDateUtil.persianMonths[m.jMonth()];
+      const year = m.jYear();
+      return `${day} ${month} ${year}`;
     }
+    case 'jDD MMM jYYYY': {
+      const day = m.jDate();
+      const month = JalaliDateUtil.persianMonths[m.jMonth()];
+      const year = m.jYear();
+      return `${day} ${month} ${year}`;
+    }
+    case 'full':
+      return `${m.format('jYYYY/jMM/jDD')} ${m.format('HH:mm')}`;
+    case 'jYYYY/jMM':
+      return m.format('jYYYY/jMM');
+    case 'jYYYY-jMM':
+      return m.format('jYYYY-jMM');
+    case 'jDD jMMMM jYYYY - HH:mm': {
+      const day = m.jDate();
+      const month = JalaliDateUtil.persianMonths[m.jMonth()];
+      const year = m.jYear();
+      const time = m.format('HH:mm');
+      return `${day} ${month} ${year} - ${time}`;
+    }
+    default:
+      return m.format('jYYYY/jMM/jDD');
   }
+}
 
   static toJalaliDateTime(date: Date | string): string {
     const m = moment(typeof date === 'string' ? new Date(date) : date);

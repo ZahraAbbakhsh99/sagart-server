@@ -15,6 +15,9 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { ReviewModule } from './review/review.module';
 import { ArticleModule } from './article/article.module';
 import { AddressModule } from './address/address.module';
+import { ShippingModule } from './shipping/shipping.module';
+import { OrderModule } from './order/order.module';
+import { PaymentModule } from './payment/payment.module';
 
 const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
 
@@ -61,6 +64,12 @@ const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
     ArticleModule,
 
     AddressModule,
+
+    ShippingModule,
+
+    OrderModule,
+
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

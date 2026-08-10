@@ -79,6 +79,7 @@ export class CartService {
 
       return {
         id: item.id,
+        productId: item.productId,
         product: {
           id: product.id,
           title: product.title,
