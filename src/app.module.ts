@@ -18,13 +18,18 @@ import { AddressModule } from './address/address.module';
 import { ShippingModule } from './shipping/shipping.module';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
+import { join } from 'path';
 
-const envFilePath = `.env.${process.env.NODE_ENV || 'development'}`;
+const envFilePath = join(
+  __dirname,
+  '..',
+  `.env.${process.env.NODE_ENV || 'development'}`
+);
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: envFilePath,
+      envFilePath,
       isGlobal: true,
       cache: true,
     }),

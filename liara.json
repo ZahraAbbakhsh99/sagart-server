@@ -1,0 +1,7 @@
+{
+  "app": "sagart-server",
+  "port": 8000,
+  "node": {
+    "version": "20"
+  }
+}
