@@ -1,11 +1,10 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { StorageProvider } from './interfaces/storage-provider.interface';
-import { LocalStorageProvider } from './providers/local-storage.provider';
 
 @Injectable()
 export class FileService {
   constructor(
-    @Inject(LocalStorageProvider)
+    @Inject('StorageProvider')
     private readonly storage: StorageProvider,
   ) {}
 

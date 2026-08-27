@@ -1,11 +1,19 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { FileController } from './file.controller';
 import { FileService } from './file.service';
-import { LocalStorageProvider } from './providers/local-storage.provider';
+import { LiaraStorageProvider } from './providers/liara-storage.provider';
 
 @Module({
+  imports: [ConfigModule],
   controllers: [FileController],
-  providers: [FileService, LocalStorageProvider],
+  providers: [
+    FileService,
+    {
+      provide: 'StorageProvider',
+      useClass: LiaraStorageProvider,
+    },
+  ],
   exports: [FileService],
 })
 export class FileModule {}

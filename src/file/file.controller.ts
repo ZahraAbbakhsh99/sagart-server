@@ -4,18 +4,23 @@ import { FileService } from './file.service';
 import { FileUploadDto, FileDeleteDto, FileUpdateDto } from './dto/file-upload.dto';
 import { validateFile } from './validators/file-validation.config';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
-// import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-// import { AdminGuard } from '../auth/guards/admin.guard';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @ApiTags('file')
 @Controller('file')
 @ApiBearerAuth()
-// @UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard, AdminGuard)
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
-  private getBaseUrl(): string {
-    return process.env.BASE_URL || 'http://localhost:3000';
+  private getFullUrl(filePath: string): string {
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      return filePath;
+    }
+    const fileBaseUrl = process.env.File_BASE_URL;
+    const normalizedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
+    return `${fileBaseUrl}${normalizedPath}`;
   }
 
   @Post('upload/image')
@@ -26,7 +31,7 @@ export class FileController {
     if (!file) throw new BadRequestException('فایلی ارسال نشده است');
     validateFile(file, 'image');
     const filePath = await this.fileService.upload(file, 'images');
-    const url = `${this.getBaseUrl()}/${filePath}`;
+    const url = this.getFullUrl(filePath);
     return { message: 'تصویر با موفقیت آپلود شد', data: {filePath, url} };
   }
 
@@ -38,7 +43,7 @@ export class FileController {
     if (!file) throw new BadRequestException('فایلی ارسال نشده است');
     validateFile(file, 'video');
     const filePath = await this.fileService.upload(file, 'videos');
-    const url = `${this.getBaseUrl()}/${filePath}`;
+    const url = this.getFullUrl(filePath);
     return { message: 'ویدیو با موفقیت آپلود شد', data: {filePath, url} };
   }
 
@@ -62,9 +67,9 @@ export class FileController {
 
     const pathParts = updateDto.oldPath.split('/');
     const folder = pathParts.length > 1 ? pathParts[1] : 'general';
-    
+
     const filePath = await this.fileService.update(updateDto.oldPath, file, folder);
-    const url = `${this.getBaseUrl()}/${filePath}`;
+    const url = this.getFullUrl(filePath);
     return { message: 'فایل با موفقیت به‌روزرسانی شد', data: {filePath, url} };
   }
 }
