@@ -18,7 +18,7 @@ export class FileController {
     if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
       return filePath;
     }
-    const fileBaseUrl = process.env.File_BASE_URL;
+    const fileBaseUrl = process.env.LIARA_PUBLIC_ENDPOINT;
     const normalizedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
     return `${fileBaseUrl}${normalizedPath}`;
   }
