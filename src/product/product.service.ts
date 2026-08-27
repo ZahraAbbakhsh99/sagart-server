@@ -68,8 +68,8 @@ export class ProductService {
       code: product.code,
       price: Number(product.price),
       discountDisplay: product.discountPercent > 0 
-        ? `${Math.round(Number(product.discountPercent))}%` 
-        : '۰%',
+          ? `${Math.round(Number(product.discountPercent))}%`
+          : '۰%',
       priceAfterDiscount: product.priceAfterDiscount,
       measure: product.measure,
       images: product.images,
@@ -92,18 +92,20 @@ export class ProductService {
 
   async create(dto: CreateProductDto): Promise<Product> {
     const slug = this.generateSlug(dto.title, dto.measure);
-    
+
     const existing = await this.productRepo.findOne({
       where: [{ code: dto.code }, { slug }],
     });
     if (existing) {
       throw new ConflictException('کد محصول یا عنوان با این اندازه تکراری است');
     }
-    
+
     const product = this.productRepo.create({
       ...dto,
       slug,
     });
+    product.calculatePriceAfterDiscount();
+    
     return this.productRepo.save(product);
   }
 
@@ -149,6 +151,8 @@ export class ProductService {
         categoryId,
         ...rest,
       });
+      product.calculatePriceAfterDiscount();
+
       products.push(product);
       nextNumber++;
     }
@@ -256,8 +260,8 @@ export class ProductService {
       price: Number(product.price),
       priceAfterDiscount: product.priceAfterDiscount,
       discountDisplay: product.discountPercent > 0 
-        ? `${Math.round(Number(product.discountPercent))}%` 
-        : '۰%',
+          ? `${Math.round(Number(product.discountPercent))}%`
+          : '۰%',
       images: product.images,
       rating: product.rating,
       isActive: product.isActive,
@@ -317,7 +321,7 @@ export class ProductService {
       const newTitle = dto.title || product.title;
       const newMeasure = dto.measure || product.measure;
       const newSlug = this.generateSlug(newTitle, newMeasure);
-      
+
       if (newSlug !== product.slug) {
         const existing = await this.productRepo.findOne({ where: { slug: newSlug } });
         if (existing && existing.id !== id) {
@@ -336,6 +340,9 @@ export class ProductService {
     }
 
     Object.assign(product, dto);
+
+    product.calculatePriceAfterDiscount();
+    
     return this.productRepo.save(product);
   }
 
@@ -470,7 +477,7 @@ export class ProductService {
         isActive: true,
       },
       relations: {'category': true},
-      order: { measure: 'ASC' }, 
+      order: { measure: 'ASC' },
     });
 
     const otherVariants = variants.filter((p) => p.id !== currentProduct.id);
@@ -489,8 +496,8 @@ export class ProductService {
       price: Number(variant.price),
       priceAfterDiscount: variant.priceAfterDiscount,
       discountDisplay: variant.discountPercent > 0
-        ? `${Math.round(Number(variant.discountPercent))}%`
-        : '۰%',
+          ? `${Math.round(Number(variant.discountPercent))}%`
+          : '۰%',
       image: variant.images && variant.images.length > 0 ? variant.images[0] : null,
       isFavorite: favoriteIds.has(variant.id),
       categoryName: variant.category?.name,
