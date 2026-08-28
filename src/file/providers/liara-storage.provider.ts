@@ -9,18 +9,21 @@ import { StorageProvider } from '../interfaces/storage-provider.interface';
 export class LiaraStorageProvider implements StorageProvider {
   private s3Client: S3Client;
   private bucket: string;
+  private publicEndpoint: string;
 
   constructor(private configService: ConfigService) {
     const endpoint = this.configService.get<string>('LIARA_ENDPOINT');
     const accessKey = this.configService.get<string>('LIARA_ACCESS_KEY');
     const secretKey = this.configService.get<string>('LIARA_SECRET_KEY');
     const bucket = this.configService.get<string>('LIARA_BUCKET_NAME');
+    const publicEndpoint = this.configService.get<string>('LIARA_PUBLIC_ENDPOINT');
 
-    if (!endpoint || !accessKey || !secretKey || !bucket) {
+    if (!endpoint || !accessKey || !secretKey || !bucket || !publicEndpoint) {
       throw new Error('Missing Liara S3 environment variables');
     }
 
     this.bucket = bucket;
+    this.publicEndpoint = publicEndpoint;
 
     this.s3Client = new S3Client({
       region: 'default',
@@ -42,7 +45,7 @@ export class LiaraStorageProvider implements StorageProvider {
     const params = {
       Body: file.buffer,
       Bucket: this.bucket,
-      Key: `sagart-images/${fileName}`,
+      Key: fileName,
       ContentType: file.mimetype,
     };
 
@@ -59,13 +62,12 @@ export class LiaraStorageProvider implements StorageProvider {
     if (!filePath) return;
 
     let key = filePath;
-    const publicEndpoint = this.configService.get<string>('LIARA_PUBLIC_ENDPOINT');
-    if (publicEndpoint && filePath.startsWith(publicEndpoint)) {
-      key = filePath.replace(`${publicEndpoint}/`, '');
+    if (filePath.startsWith(this.publicEndpoint)) {
+      key = filePath.replace(`${this.publicEndpoint}/`, '');
     }
 
-    if (!key.startsWith('sagart-images/')) {
-      key = `sagart-images/${key}`;
+    if (!key.startsWith('images/') && !key.startsWith('videos/') && !key.startsWith('general/')) {
+      throw new Error('آدرس فایل معتبر نیست');
     }
 
     const params = {
