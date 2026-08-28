@@ -19,6 +19,8 @@ import { ShippingModule } from './shipping/shipping.module';
 import { OrderModule } from './order/order.module';
 import { PaymentModule } from './payment/payment.module';
 import { join } from 'path';
+import { ScheduleModule } from '@nestjs/schedule';
+import { CleanupModule } from './cleanup/cleanup.module';
 
 const envFilePath = join(
   __dirname,
@@ -46,6 +48,8 @@ const envFilePath = join(
       }),
     }),
 
+    ScheduleModule.forRoot(),
+    
     FileModule,
 
     UserModule,
@@ -75,6 +79,8 @@ const envFilePath = join(
     OrderModule,
 
     PaymentModule,
+
+    CleanupModule,
   ],
   controllers: [AppController],
   providers: [AppService],
